@@ -1,12 +1,18 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Evidence } from "../types";
-const KEY = "pair-wise-yf-49/court";
+import type { CourtSnapshot } from "../types";
+import { commitToHub, loadHub, type CommitRequest, type CommitResult } from "./collab";
+
 export const courtApi = createApi({
   reducerPath: "courtApi",
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
-    getEvidence: builder.query<Evidence[], void>({ queryFn: async () => { const raw = localStorage.getItem(KEY); return { data: raw ? JSON.parse(raw).evidence : [] }; } }),
-    saveEvidence: builder.mutation<{ ok: true }, Evidence[]>({ queryFn: async (payload) => { const raw = localStorage.getItem(KEY); const current = raw ? JSON.parse(raw) : {}; localStorage.setItem(KEY, JSON.stringify({ ...current, evidence: payload })); return { data: { ok: true } }; } })
-  })
+    getSnapshot: builder.query<CourtSnapshot, void>({
+      queryFn: async () => ({ data: loadHub() }),
+    }),
+    commitSnapshot: builder.mutation<CommitResult, CommitRequest>({
+      queryFn: async (request) => ({ data: commitToHub(request) }),
+    }),
+  }),
 });
-export const { useGetEvidenceQuery, useSaveEvidenceMutation } = courtApi;
+
+export const { useGetSnapshotQuery, useCommitSnapshotMutation } = courtApi;
